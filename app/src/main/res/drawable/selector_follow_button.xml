@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 未关注状态（默认） -->
+    <item android:state_pressed="false">
+        <shape android:shape="rectangle">
+            <solid android:color="#E53935" />
+            <corners android:radius="5dp" />
+        </shape>
+    </item>
+    <!-- 未关注-按压状态 -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#C82333" /> <!-- 按压时红色加深，增强反馈 -->
+            <corners android:radius="5dp" />
+        </shape>
+    </item>
+</selector>

@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog_rounded_top"
+    android:paddingTop="16dp"
+    android:paddingBottom="24dp">
+
+    <!-- 关闭按钮 -->
+    <ImageView
+        android:id="@+id/iv_close"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/ic_close"
+        android:contentDescription="关闭"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 备注/昵称标题 -->
+    <TextView
+        android:id="@+id/tv_nickname"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:text="用户昵称"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 名字和抖音号信息行 -->
+    <LinearLayout
+        android:id="@+id/ll_user_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_nickname">
+
+        <!-- 名字部分（仅在有备注时显示） -->
+        <LinearLayout
+            android:id="@+id/ll_name_section"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tv_name_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="名字: "
+                android:textColor="#808080"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tv_name_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="用户昵称"
+                android:textColor="#808080"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:text="|"
+                android:textColor="#808080"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- 抖音号部分（始终显示） -->
+        <TextView
+            android:id="@+id/tv_douyin_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="抖音号: "
+            android:textColor="#808080"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_douyin_id_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="user123"
+            android:textColor="#808080"
+            android:textSize="14sp" />
+
+        <ImageView
+            android:id="@+id/iv_copy"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_copy"
+            android:contentDescription="复制"
+            android:padding="2dp" />
+    </LinearLayout>
+
+    <!-- 分割线 -->
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="20dp"
+        android:background="#E5E7EB"
+        app:layout_constraintTop_toBottomOf="@id/ll_user_info" />
+
+    <!-- 特别关注选项 -->
+    <LinearLayout
+        android:id="@+id/ll_special_follow"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="20dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        app:layout_constraintTop_toBottomOf="@id/divider">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_special_follow_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="特别关注"
+                android:textColor="@android:color/black"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tv_special_follow_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="作品优先推荐, 更新及时提示"
+                android:textColor="#808080"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <Switch
+            android:id="@+id/switch_special_follow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:thumbTint="@color/switch_thumb"
+            android:trackTint="@color/switch_track_selector" />
+    </LinearLayout>
+
+    <!-- 设置备注选项 -->
+    <LinearLayout
+        android:id="@+id/ll_remark"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="20dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        app:layout_constraintTop_toBottomOf="@id/ll_special_follow">
+
+        <TextView
+            android:id="@+id/tv_remark_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="设置备注"
+            android:textColor="@android:color/black"
+            android:textSize="16sp" />
+
+        <ImageView
+            android:id="@+id/iv_remark_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_edit"
+            android:contentDescription="编辑"
+            app:tint="#808080" />
+    </LinearLayout>
+
+    <!-- 取消关注选项 -->
+    <LinearLayout
+        android:id="@+id/ll_unfollow"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="20dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        app:layout_constraintTop_toBottomOf="@id/ll_remark">
+
+        <TextView
+            android:id="@+id/tv_unfollow_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="取消关注"
+            android:textColor="#FF0000"
+            android:textSize="16sp" />
+
+        <ImageView
+            android:id="@+id/iv_unfollow_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_unfollow"
+            android:contentDescription="取消关注"
+            app:tint="#FF0000" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
