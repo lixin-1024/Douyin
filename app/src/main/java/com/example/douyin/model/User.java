@@ -28,7 +28,7 @@ public class User {
     @ColumnInfo(name = "remark")
     private String remark;
 
-    public User(String id, String nickname, String avatar, boolean isFollowed, boolean isSpecialFollowed, String remark) {
+    public User(@NonNull String id, String nickname, String avatar, boolean isFollowed, boolean isSpecialFollowed, String remark) {
         this.id = id;
         this.nickname = nickname;
         this.avatar = avatar;
@@ -37,11 +37,12 @@ public class User {
         this.remark = remark;
     }
 
+    @NonNull
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(@NonNull String id) {
         this.id = id;
     }
 

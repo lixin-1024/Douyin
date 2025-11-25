@@ -19,7 +19,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class, "user_database")
-                            .fallbackToDestructiveMigration() //开发阶段数据库结构变化时清除旧数据
+                            .fallbackToDestructiveMigration() //数据库版本升级时，允许破坏性迁移
                             .build();
                 }
             }

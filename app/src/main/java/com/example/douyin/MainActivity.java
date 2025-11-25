@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewPager() {
         pagerAdapter = new TabPagerAdapter(this);
         viewPager.setAdapter(pagerAdapter);
-        viewPager.setCurrentItem(1, false); //默认显示关注tab
     }
 
     private void setupTabLayout() {

@@ -17,8 +17,8 @@ import java.util.List;
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
 
     private List<User> userList;
-    private Context context;
-    private OnItemClickListener listener;
+    private final Context context;
+    private final OnItemClickListener listener;
 
     public interface OnItemClickListener {
         void onFollowClick(int position);

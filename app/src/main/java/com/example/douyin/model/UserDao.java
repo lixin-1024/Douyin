@@ -11,12 +11,6 @@ import java.util.List;
 
 @Dao
 public interface UserDao {
-    @Query("SELECT * FROM users")
-    LiveData<List<User>> getAllUsers();
-
-    @Query("SELECT * FROM users WHERE is_followed = 1")
-    LiveData<List<User>> getFollowedUsers();
-
     @Insert
     void insert(User user);
 
@@ -25,5 +19,8 @@ public interface UserDao {
 
     @Query("DELETE FROM users")
     void deleteAll();
+
+    @Query("SELECT * FROM users WHERE is_followed = 1")
+    LiveData<List<User>> getFollowedUsers();
 }
 

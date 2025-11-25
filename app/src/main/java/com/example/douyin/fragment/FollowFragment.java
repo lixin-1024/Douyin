@@ -30,9 +30,7 @@ import com.example.douyin.model.User;
 import com.example.douyin.viewmodel.UserViewModel;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 public class FollowFragment extends Fragment implements UserAdapter.OnItemClickListener {
@@ -42,9 +40,7 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
     private UserViewModel userViewModel;
     private TextView tvFollowCount;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private List<User> currentUserList = new ArrayList<>(); //当前显示的列表（可能包含刚被取关的用户）
-    private List<User> allUsersList = new ArrayList<>(); //所有用户数据
-    private boolean isDataInitialized = false;
+    private final List<User> displayedUsers = new ArrayList<>();
 
     @Nullable
     @Override
@@ -67,7 +63,7 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
 
     private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        userAdapter = new UserAdapter(getContext(), currentUserList, this);
+        userAdapter = new UserAdapter(getContext(), new ArrayList<>(), this);
         recyclerView.setAdapter(userAdapter);
     }
 
@@ -75,113 +71,54 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
     private void setupSwipeRefresh() {
         swipeRefreshLayout.setColorSchemeResources(android.R.color.darker_gray);
         swipeRefreshLayout.setOnRefreshListener(() -> {
-            refresh();
+            if (userViewModel != null) {
+                userViewModel.loadFollowedUsers();
+            }
             swipeRefreshLayout.setRefreshing(false);
         });
     }
 
     private void setupViewModel() {
         userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
-        userViewModel.deleteAll();
-        //观察所有用户
-        userViewModel.getAllUsers().observe(getViewLifecycleOwner(), allUsers -> {
-            if (allUsers == null) return;
-            if (allUsers.isEmpty() && !isDataInitialized) {
-                initializeSampleData();
-                isDataInitialized = true;
-                return;
+        userViewModel.getDisplayUsers().observe(getViewLifecycleOwner(), users -> {
+            displayedUsers.clear();
+            if (users != null) {
+                displayedUsers.addAll(users);
+                userAdapter.setUserList(new ArrayList<>(displayedUsers));
+            } else {
+                userAdapter.setUserList(new ArrayList<>());
             }
-
-            allUsersList.clear();
-            allUsersList.addAll(allUsers);
-            updateDisplayList();
         });
-
-        //观察已关注用户：仅缓存结果，供下拉刷新使用
-        userViewModel.getFollowedUsers().observe(getViewLifecycleOwner(), followedUsers -> {});
-    }
-
-    private void initializeSampleData() {
-        List<User> sampleUsers = new ArrayList<>();
-        sampleUsers.add(new User("1", "用户1", "avatar_default", true, false, null));
-        sampleUsers.add(new User("2", "用户2", "avatar_default", true, true, null));
-        sampleUsers.add(new User("3", "用户3", "avatar_default", true, false, null));
-        sampleUsers.add(new User("4", "用户4", "avatar_default", true, false, null));
-        sampleUsers.add(new User("5", "用户5", "avatar_default", true, false, null));
-        sampleUsers.add(new User("6", "用户6", "avatar_default", true, true, null));
-
-        for (User user : sampleUsers) {
-            userViewModel.insert(user);
-        }
-    }
-
-    //更新显示列表
-    private void updateDisplayList() {
-        if (currentUserList.isEmpty()) {
-            //首次加载只显示已关注用户
-            for (User user : allUsersList) {
-                if (user.isFollowed()) {
-                    currentUserList.add(user);
-                }
-            }
-        }
-        userAdapter.setUserList(currentUserList);
-        updateFollowCount();
-    }
-
-    //更新关注人数
-    private void updateFollowCount() {
-        int followedCount = 0;
-        for (User user : allUsersList) {
-            if (user.isFollowed()) {
-                followedCount++;
-            }
-        }
-        tvFollowCount.setText("我的关注 (" + followedCount + "人)");
-    }
-
-    //刷新列表
-    public void refresh() {
-        //直接使用已缓存的followedUsersList
-        if (userViewModel.getFollowedUsers().getValue() != null) {
-            currentUserList.clear();
-            currentUserList.addAll(userViewModel.getFollowedUsers().getValue());
-            userAdapter.setUserList(currentUserList);
-        }
+        userViewModel.getFollowCount().observe(getViewLifecycleOwner(), count -> {
+            int safeCount = count != null ? count : 0;
+            tvFollowCount.setText("我的关注 (" + safeCount + "人)");
+        });
     }
 
     //关注和取关按钮点击事件
     @Override
     public void onFollowClick(int position) {
-        if (position < 0 || position >= currentUserList.size()) {
-            return;
-        }
-        User user = currentUserList.get(position);
+        User user = getUserAt(position);
+        if (user == null) return;
 
+        //判断是否为特别关注
         if (user.isFollowed()) {
-            //判断是否为特别关注
             if (user.isSpecialFollowed()) {
-                //特别关注用户，弹出二次确认
-                showSpecialUnfollowDialog(user, position);
+                showSpecialUnfollowDialog(user);//特别关注用户，弹出二次确认
             } else {
-                handleUnfollow(user, position, "已取关: " + user.getNickname());
+                performUnfollow(user, "已取关: " + user.getNickname());
             }
         } else {
-            user.setFollowed(true);
-            userViewModel.update(user);
+            userViewModel.followUser(user);
             Toast.makeText(getContext(), "关注成功: " + user.getNickname(), Toast.LENGTH_SHORT).show();
-            userAdapter.notifyItemChanged(position);
-            updateFollowCount();
         }
     }
 
     //更多选项按钮点击事件
     @Override
     public void onMoreClick(int position) {
-        if (position < 0 || position >= currentUserList.size()) {
-            return;
-        }
-        User user = currentUserList.get(position);
+        User user = getUserAt(position);
+        if (user == null) return;
 
         //如果用户已取关
         if (!user.isFollowed()) {
@@ -189,11 +126,11 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
             return;
         }
 
-        showMoreOptionsDialog(user, position);
+        showMoreOptionsDialog(user);
     }
 
     //更多选项对话框
-    private void showMoreOptionsDialog(User user, int position) {
+    private void showMoreOptionsDialog(User user) {
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_more_options, null);
 
         com.google.android.material.bottomsheet.BottomSheetDialog dialog =
@@ -223,9 +160,10 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
         //设置用户信息显示
         String nickname = user.getNickname() != null ? user.getNickname() : "";
         String remark = user.getRemark() != null && !user.getRemark().isEmpty() ? user.getRemark() : null;
-        String douyinId = user.getId() != null ? user.getId() : "user" + user.getId();
+        String douyinId = user.getId();
 
-        if (remark != null) {//如果有备注
+        //判断有无备注
+        if (remark != null) {
             //第一行显示备注
             tvNickname.setText(remark);
             //第二行显示昵称|抖音号
@@ -257,22 +195,20 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
         llSpecialFollow.setOnClickListener(v -> {
             boolean newState = !switchSpecialFollow.isChecked();
             switchSpecialFollow.setChecked(newState);
-            user.setSpecialFollowed(newState);
-            userViewModel.update(user);
+            userViewModel.setSpecialFollow(user, newState);
             String message = newState ? "已设为特别关注" : "已取消特别关注";
             Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
         });
 
         switchSpecialFollow.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            user.setSpecialFollowed(isChecked);
-            userViewModel.update(user);
+            userViewModel.setSpecialFollow(user, isChecked);
             String message = isChecked ? "已设为特别关注" : "已取消特别关注";
             Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
         });
 
         //设置备注选项
         llRemark.setOnClickListener(v -> {
-            showRemarkDialog(user, position);
+            showRemarkDialog(user);
             dialog.dismiss();
         });
 
@@ -280,9 +216,9 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
         llUnfollow.setOnClickListener(v -> {
             if (user.isSpecialFollowed()) {
                 dialog.dismiss();
-                showSpecialUnfollowDialog(user, position);
+                showSpecialUnfollowDialog(user);
             } else {
-                handleUnfollow(user, position, "已取消关注: " + user.getNickname());
+                performUnfollow(user, "已取消关注: " + user.getNickname());
                 dialog.dismiss();
             }
         });
@@ -290,7 +226,7 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
         dialog.show();
     }
 
-    private void showSpecialUnfollowDialog(User user, int position) {
+    private void showSpecialUnfollowDialog(User user) {
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_special_unfollow, null);
         com.google.android.material.bottomsheet.BottomSheetDialog dialog =
                 new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
@@ -307,7 +243,7 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
         TextView tvCancel = dialogView.findViewById(R.id.tv_cancel);
 
         tvConfirm.setOnClickListener(v -> {
-            handleUnfollow(user, position, "已取消特别关注: " + user.getNickname());
+            performUnfollow(user, "已取消特别关注: " + user.getNickname());
             dialog.dismiss();
         });
 
@@ -316,26 +252,13 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
         dialog.show();
     }
 
-    private void handleUnfollow(User user, int position, String toastMessage) {
-        user.setFollowed(false);
-        user.setSpecialFollowed(false);
-        userViewModel.update(user);
-
-        if (position >= 0 && position < currentUserList.size()) {
-            User currentUser = currentUserList.get(position);
-            if (currentUser.getId().equals(user.getId())) {
-                currentUser.setFollowed(false);
-                currentUser.setSpecialFollowed(false);
-                userAdapter.notifyItemChanged(position);
-            }
-        }
-
+    private void performUnfollow(User user, String toastMessage) {
+        userViewModel.unfollowUser(user);
         Toast.makeText(getContext(), toastMessage, Toast.LENGTH_SHORT).show();
-        updateFollowCount();
     }
 
     //设置备注对话框
-    private void showRemarkDialog(User user, int position) {
+    private void showRemarkDialog(User user) {
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_remark, null);
 
         AlertDialog dialog = new AlertDialog.Builder(getContext())
@@ -381,7 +304,7 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                ivClear.setVisibility(s.length() > 0 ? View.VISIBLE : View.GONE);
+                ivClear.setVisibility(!s.isEmpty() ? View.VISIBLE : View.GONE);
             }
 
             @Override
@@ -389,7 +312,7 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
         });
 
         //初始状态：如果有文本就显示清除按钮
-        ivClear.setVisibility(etRemark.getText().length() > 0 ? View.VISIBLE : View.GONE);
+        ivClear.setVisibility(!etRemark.getText().isEmpty() ? View.VISIBLE : View.GONE);
 
         //清除按钮点击事件
         ivClear.setOnClickListener(v -> {
@@ -403,31 +326,19 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
         //确认按钮
         tvConfirm.setOnClickListener(v -> {
             String newRemark = etRemark.getText().toString().trim();
-            String userNickname = user.getNickname() != null ? user.getNickname() : "";
-
-            //如果备注等于原名字，相当于没有备注，清空备注
-            if (newRemark.equals(userNickname)) {
-                newRemark = "";
-            }
-
-            //更新数据库
-            user.setRemark(newRemark.isEmpty() ? null : newRemark);
-            userViewModel.update(user);
-
-            //更新currentUserList中对应用户的备注
-            if (position >= 0 && position < currentUserList.size()) {
-                User currentUser = currentUserList.get(position);
-                if (currentUser.getId().equals(user.getId())) {
-                    currentUser.setRemark(newRemark.isEmpty() ? null : newRemark);
-                    //单条item更新显示
-                    userAdapter.notifyItemChanged(position);
-                }
-            }
+            userViewModel.setRemark(user, newRemark);
 
             Toast.makeText(getContext(), "备注已设置", Toast.LENGTH_SHORT).show();
             dialog.dismiss();
         });
 
         dialog.show();
+    }
+
+    private User getUserAt(int position) {
+        if (position < 0 || position >= displayedUsers.size()) {
+            return null;
+        }
+        return displayedUsers.get(position);
     }
 }
