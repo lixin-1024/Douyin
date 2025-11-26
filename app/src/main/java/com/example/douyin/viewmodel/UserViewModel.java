@@ -31,7 +31,6 @@ public class UserViewModel extends AndroidViewModel {
     }
 
     private void syncDisplayUsers(List<User> users) {
-        //repository.deleteAll();
         if ((users == null || users.isEmpty())) {
             repository.insertSampleData();
             return;
@@ -70,7 +69,7 @@ public class UserViewModel extends AndroidViewModel {
             return;
         }
         user.setFollowed(true);
-        repository.update(user);
+        repository.update(user);//写入数据库后触发Room的LiveData回调
     }
 
     public void unfollowUser(User user) {

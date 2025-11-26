@@ -259,6 +259,7 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
 
     //设置备注对话框
     private void showRemarkDialog(User user) {
+        try{
         View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_remark, null);
 
         AlertDialog dialog = new AlertDialog.Builder(getContext())
@@ -304,7 +305,7 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                ivClear.setVisibility(!s.isEmpty() ? View.VISIBLE : View.GONE);
+                ivClear.setVisibility(etRemark.getText().length() > 0 ? View.VISIBLE : View.GONE);
             }
 
             @Override
@@ -312,7 +313,7 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
         });
 
         //初始状态：如果有文本就显示清除按钮
-        ivClear.setVisibility(!etRemark.getText().isEmpty() ? View.VISIBLE : View.GONE);
+        ivClear.setVisibility(etRemark.getText().length() > 0 ? View.VISIBLE : View.GONE);
 
         //清除按钮点击事件
         ivClear.setOnClickListener(v -> {
@@ -332,7 +333,11 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
             dialog.dismiss();
         });
 
-        dialog.show();
+        dialog.show();}
+        catch (Exception e) {
+                e.printStackTrace(); // 打印异常信息
+                Toast.makeText(getContext(), "设置备注失败", Toast.LENGTH_SHORT).show();
+            }
     }
 
     private User getUserAt(int position) {
