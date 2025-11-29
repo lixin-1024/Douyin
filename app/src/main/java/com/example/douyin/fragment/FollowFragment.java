@@ -62,9 +62,36 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
     }
 
     private void setupRecyclerView() {
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        recyclerView.setLayoutManager(layoutManager);
+        
+        // 性能优化：设置RecyclerView缓存
+        recyclerView.setItemViewCacheSize(20); // 增加缓存大小，提升滑动流畅度
+        recyclerView.setHasFixedSize(true); // 如果item高度固定，可以提升性能
+        // 启用嵌套滚动优化
+        recyclerView.setNestedScrollingEnabled(true);
+        
         userAdapter = new UserAdapter(getContext(), new ArrayList<>(), this);
         recyclerView.setAdapter(userAdapter);
+        
+        // 添加滚动监听，实现分页加载
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                
+                int visibleItemCount = layoutManager.getChildCount();
+                int totalItemCount = layoutManager.getItemCount();
+                int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
+                
+                // 当滚动到距离底部5个item时，开始加载更多
+                if (!userViewModel.getIsLoadingMore().getValue() 
+                    && userViewModel.hasMore()
+                    && (firstVisibleItemPosition + visibleItemCount) >= totalItemCount - 5) {
+                    userViewModel.loadMore();
+                }
+            }
+        });
     }
 
     //下拉刷新
@@ -72,14 +99,22 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
         swipeRefreshLayout.setColorSchemeResources(android.R.color.darker_gray);
         swipeRefreshLayout.setOnRefreshListener(() -> {
             if (userViewModel != null) {
-                userViewModel.loadFollowedUsers();
+                userViewModel.refresh();
             }
-            swipeRefreshLayout.setRefreshing(false);
         });
+        
+        // 监听加载状态，自动关闭刷新指示器
+        if (userViewModel != null) {
+            userViewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
+                swipeRefreshLayout.setRefreshing(isLoading != null && isLoading);
+            });
+        }
     }
 
     private void setupViewModel() {
         userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
+        
+        // 观察用户列表
         userViewModel.getDisplayUsers().observe(getViewLifecycleOwner(), users -> {
             displayedUsers.clear();
             if (users != null) {
@@ -89,10 +124,22 @@ public class FollowFragment extends Fragment implements UserAdapter.OnItemClickL
                 userAdapter.setUserList(new ArrayList<>());
             }
         });
+        
+        // 观察关注数量
         userViewModel.getFollowCount().observe(getViewLifecycleOwner(), count -> {
             int safeCount = count != null ? count : 0;
             tvFollowCount.setText("我的关注 (" + safeCount + "人)");
         });
+        
+        // 观察错误信息
+        userViewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
+            if (error != null && !error.isEmpty()) {
+                Toast.makeText(getContext(), error, Toast.LENGTH_SHORT).show();
+            }
+        });
+        
+        // 初始化加载数据
+        userViewModel.loadInitialData();
     }
 
     //关注和取关按钮点击事件

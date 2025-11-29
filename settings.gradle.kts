@@ -14,8 +14,10 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        google()
-        mavenCentral()
+        // 腾讯云Google镜像
+        maven { url = uri("https://mirrors.cloud.tencent.com/maven/google/") }
+        // 腾讯云Maven中央仓库镜像
+        maven { url = uri("https://mirrors.cloud.tencent.com/maven/") }
     }
 }
 
